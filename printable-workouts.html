@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Printable Workout Plan</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 16px; }
+        .workout-day {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            padding: 8px;
+            page-break-inside: avoid;
+            font-size: 0.95em;
+        }
+        .workout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 1em;
+        }
+        .complete-box {
+            width: 18px; height: 18px;
+            border: 2px solid #333;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .notes {
+            border: 1px dashed #aaa;
+            min-height: 28px;
+            margin-top: 6px;
+            padding: 4px;
+            font-size: 0.95em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #bbb;
+            padding: 3px 5px;
+            text-align: left;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+            .workout-day {
+                page-break-after: auto;
+            }
+            .workout-day.print-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 id="printable-title" style="cursor:pointer;" title="Click to edit">Printable Workout Plan</h1>
+    <button class="no-print" onclick="window.print()">Print This Page</button>
+    <div id="workoutPrintList"></div>
+    <script>
+        // Helper to get day of week
+        function getDayOfWeek(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const d = new Date(year, month - 1, day);
+            return d.toLocaleDateString(undefined, { weekday: 'long' });
+        }
+
+        // Load workouts from localStorage
+        const workouts = JSON.parse(localStorage.getItem('workouts')) || {};
+        // Sort by date
+        const workoutEntries = Object.entries(workouts)
+            .map(([key, workout]) => ({ key, workout }))
+            .sort((a, b) => {
+                const [ay, am, ad] = a.key.split('-').map(Number);
+                const [by, bm, bd] = b.key.split('-').map(Number);
+                return new Date(ay, am - 1, ad) - new Date(by, bm - 1, bd);
+            });
+
+        const container = document.getElementById('workoutPrintList');
+        if (workoutEntries.length === 0) {
+            container.innerHTML = "<em>No workouts found.</em>";
+        } else {
+            workoutEntries.forEach(({ key, workout }) => {
+                const [year, month, day] = key.split('-');
+                const dayOfWeek = getDayOfWeek(key);
+                const div = document.createElement('div');
+                div.className = 'workout-day';
+                div.innerHTML = `
+                    <div class="workout-header">
+                        <div>
+                            <span class="complete-box"></span>
+                            <strong>${workout.title || "Untitled Workout"}</strong>
+                        </div>
+                        <div>
+                            <span>${dayOfWeek}, ${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}</span>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Exercise</th>
+                                <th>Sets</th>
+                                <th>Reps/Time</th>
+                                <th>Weight</th>
+                                <th>Rest (sec)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${workout.exercises.map(ex => `
+                                <tr>
+                                    <td>${ex.exercise}</td>
+                                    <td>${ex.sets}</td>
+                                    <td>${ex.isTime ? (ex.time + " sec") : (ex.reps + " reps")}</td>
+                                    <td>${ex.weight > 0 ? ex.weight + " " + (ex.weightUnit || "lb") : "-"}</td>
+                                    <td>${ex.rest || "-"}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="notes"><strong>Notes:</strong><br><br></div>
+                `;
+                container.appendChild(div);
+                
+            });
+        }
+
+        // Make the main title editable and persistent (optional: store in localStorage)
+        const printableTitle = document.getElementById('printable-title');
+        const savedTitle = localStorage.getItem('printableTitle');
+        if (savedTitle) printableTitle.textContent = savedTitle;
+
+        printableTitle.onclick = function () {
+            const input = document.createElement('input');
+            input.type = "text";
+            input.value = printableTitle.textContent;
+            input.style.fontSize = "2em";
+            input.style.fontWeight = "bold";
+            input.style.width = "80%";
+            printableTitle.replaceWith(input);
+            input.focus();
+
+            function saveTitle() {
+                const newTitle = input.value.trim() || "Printable Workout Plan";
+                localStorage.setItem('printableTitle', newTitle);
+                printableTitle.textContent = newTitle;
+                input.replaceWith(printableTitle);
+            }
+
+            input.onblur = saveTitle;
+            input.onkeydown = function (e) {
+                if (e.key === "Enter") saveTitle();
+            };
+        };
+    </script>
+</body>
+</html>

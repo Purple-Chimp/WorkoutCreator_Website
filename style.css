@@ -1,0 +1,421 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    min-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    flex-direction: column;
+    padding-bottom: 40px;
+}
+
+.wrapper {
+    width: 450px;
+    background: #fff;
+    border-radius: 10px;
+}
+
+.wrapper header {
+    display: flex;
+    align-items: center;
+    padding: 25px 30px 10px;
+    justify-content: space-between;
+}
+
+header .current-date {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+header .icons span {
+    height: 38px;
+    width: 38px;
+    color: #878787;
+    font-size: 1.9rem;
+    margin: 0 1px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 38px;
+    border-radius: 50%;
+}
+
+header .icons span:hover {
+    background: #e8e8e8;
+}
+
+header .icons span.last-child {
+    margin-right: -10px;
+}
+
+#back-button {
+    position: fixed;
+    bottom: 24px;
+    right: 32px;
+    z-index: 3001;
+    padding: 12px 24px;
+    background: #3d3d3d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+#back-button:hover {
+    background: #000000;
+}
+
+#print-button {
+    position: fixed;
+    bottom: 24px;
+    left: 32px;
+    z-index: 3001;
+    padding: 12px 24px;
+    background: #3d3d3d;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+#print-button:hover {
+    background: #000000;
+}
+
+.calendar {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 24px 24px 24px 24px; /* Increase top padding here */
+    margin-top: 48px;
+    margin-bottom: 48px;
+    width: 500px;
+    text-align: left;
+    
+}
+
+.calendar h1 {
+    margin: 0 0 16px 0;
+    font-size: 1.5em;
+    color: #333;
+    
+}
+
+.calendar > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.calendar button {
+    background: #e0e0e0;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin: 0 8px;
+    transition: background 0.2s;
+}
+
+.calendar button:hover {
+    background: #b3e6b3;
+}
+
+#monthYear {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #222;
+}
+
+.weeks, .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.weeks li {
+    font-weight: bold;
+    color: #666;
+    padding: 12px 10px;
+    text-align: center;
+    border-bottom: 16px solid #ffffff;
+    background: #fafafa;
+    
+}
+
+.days li {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 3px;
+    border-radius: 8px;
+    background: #f9f9f9;
+    cursor: pointer;
+    border: 1px solid #e0e0e0;
+    transition: background 0.2s, color 0.2s;
+    position: relative;
+}
+
+.days li:hover {
+    background: #e0f7fa;
+    color: #00796b;
+}
+
+.days li.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+}
+
+.days li[title] {
+    background: #b3e6b3 !important;
+    color: #222;
+    font-weight: bold;
+    border: 2px solid #388e3c;
+}
+
+@media (max-width: 500px) {
+    .calendar {
+        width: 98vw;
+        padding: 8vw 2vw 2vw 2vw;
+    }
+    .days li, .weeks li {
+        font-size: 0.95em;
+        height: 32px;
+    }
+}
+#add-workout-section {
+    display: none;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    
+}
+
+.add-workout-section {
+    margin-top: 12px;
+    
+}
+
+/* Accordion Styles */
+#workoutAccordion {
+    width: 400px;
+    margin: 6px auto 0 auto;
+}
+
+.accordion-section, .accordion-subsection {
+    margin-bottom: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.accordion-toggle {
+    width: 100%;
+    text-align: left;
+    background: #e0e0e0;
+    border: none;
+    padding: 10px;
+    font-size: 1em;
+    cursor: pointer;
+    outline: none;
+    border-radius: 6px 6px 0 0;
+    transition: background 0.2s;
+}
+
+.accordion-toggle.active {
+    background: #b3e6b3;
+}
+
+.accordion-toggle .arrow {
+    float: right;
+    font-size: 1.1em;
+    margin-left: 8px;
+    transition: transform 0.2s;
+}
+
+.accordion-content {
+    display: none;
+    padding: 10px 16px;
+}
+
+.accordion-day {
+    margin-bottom: 6px;
+    font-size: 0.98em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.accordion-day button {
+    margin-left: 10px;
+    font-size: 0.9em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #b3e6b3;
+    background: #e0f7fa;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.accordion-day button:hover {
+    background: #b3e6b3;
+    color: #222;
+}
+
+.calendar {
+    padding-top: 20px;
+}
+
+.calendar h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.exercise-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+}
+.exercise-inputs label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.98em;
+    margin-bottom: 0;
+    min-width: 110px;
+}
+.exercise-inputs input[type="number"],
+.exercise-inputs select {
+    margin-top: 4px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+}
+.exercise-inputs button {
+    align-self: flex-end;
+    margin-left: 10px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    background: #b3e6b3;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+.exercise-inputs button:hover {
+    background: #81c784;
+    color: #fff;
+}
+
+/* Toggle Switch Style */
+.switch-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+.switch {
+    display: none;
+}
+.slider {
+    width: 36px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 20px;
+    position: relative;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+.slider:before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+.switch:checked + .slider {
+    background: #4caf50;
+}
+.switch:checked + .slider:before {
+    transform: translateX(16px);
+}
+
+#daysPopup {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 3000;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Responsive sidebars and buttons for mobile */
+@media (max-width: 700px) {
+  #workoutSidebar, #customExercisesSidebar {
+    display: none;
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 96vw !important;
+    max-width: 420px !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    z-index: 9999 !important;
+    background: #fff !important;
+    border: 1px solid #ccc !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15) !important;
+  }
+  #sidebarToggle, #customSidebarToggle {
+    display: inline-block !important;
+  }
+  body {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .calendar, #workoutAccordion {
+    width: 98vw !important;
+    min-width: unset !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* Larger touch targets on mobile */
+@media (max-width: 700px) {
+  input, select, button {
+    font-size: 1.2em !important;
+    min-height: 44px !important;
+  }
+  #workoutModal > div,
+  #viewWorkoutModal > div,
+  #exerciseInfoModal > div {
+    min-width: 90vw !important;
+    max-width: 98vw !important;
+    padding: 8px !important;
+  }
+}
+
