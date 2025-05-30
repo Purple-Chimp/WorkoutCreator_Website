@@ -261,6 +261,9 @@
                     let currentExercises = [];
                     let currentTitle = "";
 
+                    let popupMonth = null;
+                    let popupYear = null;
+
                     let selectedPopupDays = [];
 
                     // Populate exercise dropdown
@@ -356,33 +359,33 @@
                     // Show modal
                     let initialCreateDayKey = null;
 
-function showWorkoutModal(key) {
-    currentWorkoutKey = key;
-    initialCreateDayKey = key; 
-    setsInput.value = 3;
-    repsInput.value = 10;
-    weightInput.value = 0;
-    restInput.value = 60;
-    isTimeInput.checked = false;
-    timeLabel.style.display = 'none';
-    timeInput.value = 30;
-    exerciseSelect.selectedIndex = 0;
-    workoutModal.style.display = 'flex';
-    // Load existing workout if present
-    if (workouts[key]) {
-        let data = workouts[key];
-        workoutTitleInput.value = data.title || "";
-        currentExercises = data.exercises ? [...data.exercises] : [];
-    } else {
-        workoutTitleInput.value = "";
-        currentExercises = [];
-    }
-    renderExerciseList();
+                    function showWorkoutModal(key) {
+                        currentWorkoutKey = key;
+                        initialCreateDayKey = key; 
+                        setsInput.value = 3;
+                        repsInput.value = 10;
+                        weightInput.value = 0;
+                        restInput.value = 60;
+                        isTimeInput.checked = false;
+                        timeLabel.style.display = 'none';
+                        timeInput.value = 30;
+                        exerciseSelect.selectedIndex = 0;
+                        workoutModal.style.display = 'flex';
+                        // Load existing workout if present
+                        if (workouts[key]) {
+                            let data = workouts[key];
+                            workoutTitleInput.value = data.title || "";
+                            currentExercises = data.exercises ? [...data.exercises] : [];
+                        } else {
+                            workoutTitleInput.value = "";
+                            currentExercises = [];
+                        }
+                            renderExerciseList();
 
-    // Pre-fill the copy days input with the initial day
-    createCopyDaysInput.value = key;
-    selectedCreatePopupDays = [key];
-}
+                        // Pre-fill the copy days input with the initial day
+                        createCopyDaysInput.value = key;
+                        selectedCreatePopupDays = [key];
+                    }
 
                     // Hide modal
                     function hideWorkoutModal() {
@@ -965,8 +968,13 @@ function showWorkoutModal(key) {
                     };
 
                     selectDaysBtn.onclick = function() {
+                        // Only set month/year if not already set (preserve navigation)
+                        if (popupYear === null || popupMonth === null) {
+                            const now = new Date();
+                            popupYear = now.getFullYear();
+                            popupMonth = now.getMonth();
+                        }
                         daysPopup.style.display = 'block';
-                        // Center the popup
                         daysPopup.style.position = 'fixed';
                         daysPopup.style.top = '50%';
                         daysPopup.style.left = '50%';
@@ -977,6 +985,8 @@ function showWorkoutModal(key) {
                     // Cancel button for the popup
                     cancelDaysBtn.onclick = function() {
                         daysPopup.style.display = 'none';
+                        popupMonth = null;
+                        popupYear = null;
                     };
 
                     // Confirm selected days to copy
@@ -986,13 +996,12 @@ function showWorkoutModal(key) {
                     };
 
                     function renderPopupCalendar() {
-                        // Show current month
-                        const now = new Date();
-                        const year = now.getFullYear();
-                        const month = now.getMonth();
+                        const year = popupYear;
+                        const month = popupMonth;
+                        document.getElementById('copyPopupMonthYear').textContent =
+                            new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
                         const daysInMonth = new Date(year, month + 1, 0).getDate();
-                        let html = `<div style="text-align:center;font-weight:bold;margin-bottom:5px;">${now.toLocaleString('default', { month: 'long', year: 'numeric' })}</div>`;
-                        html += '<div style="display:grid;grid-template-columns:repeat(7,30px);gap:2px;">';
+                        let html = '<div style="display:grid;grid-template-columns:repeat(7,30px);gap:2px;">';
                         ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => html += `<span style="font-size:12px;">${d}</span>`);
                         let firstDay = new Date(year, month, 1).getDay();
                         firstDay = (firstDay + 6) % 7; // Monday=0
@@ -1016,92 +1025,128 @@ function showWorkoutModal(key) {
                             };
                         });
                     }
+                    
+                        document.getElementById('copyPrevMonthBtn').onclick = function() {
+                    popupMonth--;
+                    if (popupMonth < 0) {
+                        popupMonth = 11;
+                        popupYear--;
+                    }
+                        renderPopupCalendar();
+                    };
+                    document.getElementById('copyNextMonthBtn').onclick = function() {
+                    popupMonth++;
+                    if (popupMonth > 11) {
+                        popupMonth = 0;
+                        popupYear++;
+                    }
+                    renderPopupCalendar();
+                    };
+
 
                     // --- Copy to Days for Creation Modal ---
-const createCopyDaysInput = document.getElementById('createCopyDaysInput');
-const createSelectDaysBtn = document.getElementById('createSelectDaysBtn');
-const createDaysPopup = document.getElementById('createDaysPopup');
-const createPopupCalendar = document.getElementById('createPopupCalendar');
-const createConfirmDaysBtn = document.getElementById('createConfirmDaysBtn');
-const createCancelDaysBtn = document.getElementById('createCancelDaysBtn');
-let selectedCreatePopupDays = [];
+                    const createCopyDaysInput = document.getElementById('createCopyDaysInput');
+                    const createSelectDaysBtn = document.getElementById('createSelectDaysBtn');
+                    const createDaysPopup = document.getElementById('createDaysPopup');
+                    const createPopupCalendar = document.getElementById('createPopupCalendar');
+                    const createConfirmDaysBtn = document.getElementById('createConfirmDaysBtn');
+                    const createCancelDaysBtn = document.getElementById('createCancelDaysBtn');
+                    let selectedCreatePopupDays = [];
 
-// State for the popup calendar
-let createPopupMonth = null;
-let createPopupYear = null;
+                    // State for the popup calendar
+                    let createPopupMonth = null;
+                    let createPopupYear = null;
 
-createCancelDaysBtn.onclick = function() {
-    createDaysPopup.style.display = 'none';
-};
+                    createCancelDaysBtn.onclick = function() {
+                        createDaysPopup.style.display = 'none';
+                        // Reset month/year so next open starts fresh
+                        createPopupMonth = null;
+                        createPopupYear = null;
+                    };
 
-createSelectDaysBtn.onclick = function() {
-    // Start at the month/year of the initial day
-    if (initialCreateDayKey) {
-        const [y, m] = initialCreateDayKey.split('-').map(Number);
-        createPopupYear = y;
-        createPopupMonth = m - 1;
-    } else {
-        const now = new Date();
-        createPopupYear = now.getFullYear();
-        createPopupMonth = now.getMonth();
-    }
-    createDaysPopup.style.display = 'block';
-    createDaysPopup.style.position = 'fixed';
-    createDaysPopup.style.top = '50%';
-    createDaysPopup.style.left = '50%';
-    createDaysPopup.style.transform = 'translate(-50%, -50%)';
-    renderCreatePopupCalendar();
-};
+                    createSelectDaysBtn.onclick = function() {
+                        // Only set month/year if not already set (preserve navigation)
+                        if (createPopupYear === null || createPopupMonth === null) {
+                            if (initialCreateDayKey) {
+                                const [y, m] = initialCreateDayKey.split('-').map(Number);
+                                createPopupYear = y;
+                                createPopupMonth = m - 1;
+                            } else {
+                                const now = new Date();
+                                createPopupYear = now.getFullYear();
+                                createPopupMonth = now.getMonth();
+                            }
+                        }
+                        // Do NOT clear selectedCreatePopupDays here, so selection persists
+                        createDaysPopup.style.display = 'block';
+                        createDaysPopup.style.position = 'fixed';
+                        createDaysPopup.style.top = '50%';
+                        createDaysPopup.style.left = '50%';
+                        createDaysPopup.style.transform = 'translate(-50%, -50%)';
+                        renderCreatePopupCalendar();
+                    };
 
-document.getElementById('createPrevMonthBtn').onclick = function() {
-    createPopupMonth--;
-    if (createPopupMonth < 0) {
-        createPopupMonth = 11;
-        createPopupYear--;
-    }
-    renderCreatePopupCalendar();
-};
-document.getElementById('createNextMonthBtn').onclick = function() {
-    createPopupMonth++;
-    if (createPopupMonth > 11) {
-        createPopupMonth = 0;
-        createPopupYear++;
-    }
-    renderCreatePopupCalendar();
-};
+                    document.getElementById('createPrevMonthBtn').onclick = function() {
+                        createPopupMonth--;
+                        if (createPopupMonth < 0) {
+                            createPopupMonth = 11;
+                            createPopupYear--;
+                        }
+                        renderCreatePopupCalendar();
+                    };
+                    document.getElementById('createNextMonthBtn').onclick = function() {
+                        createPopupMonth++;
+                        if (createPopupMonth > 11) {
+                            createPopupMonth = 0;
+                            createPopupYear++;
+                        }
+                        renderCreatePopupCalendar();
+                    };
 
-function renderCreatePopupCalendar() {
-    const year = createPopupYear;
-    const month = createPopupMonth;
-    document.getElementById('createPopupMonthYear').textContent =
-        new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let html = '<div style="display:grid;grid-template-columns:repeat(7,30px);gap:2px;">';
-    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => html += `<span style="font-size:12px;">${d}</span>`);
-    let firstDay = new Date(year, month, 1).getDay();
-    firstDay = (firstDay + 6) % 7; // Monday=0
-    for (let i = 0; i < firstDay; i++) html += `<span></span>`;
-    for (let d = 1; d <= daysInMonth; d++) {
-        const key = `${year}-${month+1}-${d}`;
-        const isInitial = key === initialCreateDayKey;
-        const selected = selectedCreatePopupDays.includes(key) || isInitial;
-        html += `<button data-key="${key}" style="width:28px;height:28px;${selected ? 'background:#2a5ad7;color:#fff;' : ''};${isInitial ? 'border:2px solid #222;' : ''}" ${isInitial ? 'disabled' : ''}>${d}</button>`;
-    }
-    html += '</div>';
-    createPopupCalendar.innerHTML = html;
-    createPopupCalendar.querySelectorAll('button[data-key]').forEach(btn => {
-        const key = btn.getAttribute('data-key');
-        if (key === initialCreateDayKey) return;
-        btn.onclick = function() {
-            if (selectedCreatePopupDays.includes(key)) {
-                selectedCreatePopupDays = selectedCreatePopupDays.filter(k => k !== key);
-            } else {
-                selectedCreatePopupDays.push(key);
-            }
-            renderCreatePopupCalendar();
-        };
-    });
-}
+                    function renderCreatePopupCalendar() {
+                        const year = createPopupYear;
+                        const month = createPopupMonth;
+                        document.getElementById('createPopupMonthYear').textContent =
+                            new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                        let html = '<div style="display:grid;grid-template-columns:repeat(7,30px);gap:2px;">';
+                        ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => html += `<span style="font-size:12px;">${d}</span>`);
+                        let firstDay = new Date(year, month, 1).getDay();
+                        firstDay = (firstDay + 6) % 7; // Monday=0
+                        for (let i = 0; i < firstDay; i++) html += `<span></span>`;
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            const key = `${year}-${month+1}-${d}`;
+                            const isInitial = key === initialCreateDayKey;
+                            const selected = selectedCreatePopupDays.includes(key) || isInitial;
+                            html += `<button data-key="${key}" style="width:28px;height:28px;${selected ? 'background:#2a5ad7;color:#fff;' : ''};${isInitial ? 'border:2px solid #222;' : ''}" ${isInitial ? 'disabled' : ''}>${d}</button>`;
+                        }
+                        html += '</div>';
+                        createPopupCalendar.innerHTML = html;
+                        createPopupCalendar.querySelectorAll('button[data-key]').forEach(btn => {
+                            const key = btn.getAttribute('data-key');
+                            if (key === initialCreateDayKey) return;
+                            btn.onclick = function() {
+                                if (selectedCreatePopupDays.includes(key)) {
+                                    selectedCreatePopupDays = selectedCreatePopupDays.filter(k => k !== key);
+                                } else {
+                                    selectedCreatePopupDays.push(key);
+                                }
+                                renderCreatePopupCalendar();
+                            };
+                        });
+                    }
+
+                    createConfirmDaysBtn.onclick = function() {
+                        // Always include the initial day
+                        let daysArr = [...selectedCreatePopupDays];
+                        if (initialCreateDayKey && !daysArr.includes(initialCreateDayKey)) {
+                            daysArr.unshift(initialCreateDayKey);
+                        }
+                        // Remove duplicates and sort
+                        daysArr = [...new Set(daysArr)];
+                        createCopyDaysInput.value = daysArr.join(',');
+                        createDaysPopup.style.display = 'none';
+                    };
 
                     // Initializes the calendar, accordion, workout list, and exercise list
                     function updateAll() {
