@@ -547,78 +547,236 @@
 
                     // Render sidebar with years and workouts
                     function renderSidebar() {
-                        const yearSelect = document.getElementById('sidebarYearSelect');
-                        const yearContent = document.getElementById('sidebarYearContent');
-                        yearSelect.innerHTML = '';
-                        yearContent.innerHTML = '';
+    const yearSelect = document.getElementById('sidebarYearSelect');
+    const yearContent = document.getElementById('sidebarYearContent');
+    yearSelect.innerHTML = '';
+    yearContent.innerHTML = '';
 
-                        // Gather all years with workouts
-                        const allWorkoutEntries = Object.entries(workouts)
-                            .map(([key, workout]) => {
-                                const [year, month, day] = key.split('-').map(Number);
-                                const dateObj = new Date(year, month - 1, day);
-                                return { key, workout, year, month, day, dateObj };
-                            })
-                            .sort((a, b) => a.dateObj - b.dateObj);
+    // Gather all years with workouts
+    const allWorkoutEntries = Object.entries(workouts)
+        .map(([key, workout]) => {
+            const [year, month, day] = key.split('-').map(Number);
+            const dateObj = new Date(year, month - 1, day);
+            return { key, workout, year, month, day, dateObj };
+        })
+        .sort((a, b) => a.dateObj - b.dateObj);
 
-                        if (allWorkoutEntries.length === 0) {
-                            yearContent.innerHTML = '<em>No workouts saved.</em>';
-                            return;
+    if (allWorkoutEntries.length === 0) {
+        yearContent.innerHTML = '<em>No workouts saved.</em>';
+        return;
+    }
+
+    // Get unique years
+    const years = [...new Set(allWorkoutEntries.map(e => e.year))].sort((a, b) => b - a);
+
+    // Populate year dropdown
+    years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+    });
+
+    // State variables
+    let isDeleteMode = false;
+    let selectedForDeletion = new Set();
+
+    // Show workouts for selected year
+    function showYear(selectedYear) {
+        yearContent.innerHTML = '';
+        
+        // Create control buttons container
+        const controlsDiv = document.createElement('div');
+        controlsDiv.style.marginBottom = '15px';
+        controlsDiv.style.padding = '10px';
+        controlsDiv.style.backgroundColor = '#f5f5f5';
+        controlsDiv.style.borderRadius = '5px';
+        controlsDiv.id = 'deleteControls';
+
+        if (!isDeleteMode) {
+            // Show only delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete Workouts';
+            deleteButton.style.backgroundColor = '#d9534f';
+            deleteButton.style.color = 'white';
+            deleteButton.style.border = 'none';
+            deleteButton.style.padding = '8px 16px';
+            deleteButton.style.borderRadius = '4px';
+            deleteButton.style.cursor = 'pointer';
+            
+            deleteButton.onclick = () => {
+                isDeleteMode = true;
+                selectedForDeletion.clear();
+                showYear(selectedYear); // Re-render with delete mode
+            };
+            
+            controlsDiv.appendChild(deleteButton);
+        } else {
+            // Show confirm and cancel buttons
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Confirm Delete';
+            confirmButton.style.backgroundColor = '#b3f6b3';
+            confirmButton.style.color = 'black';
+            confirmButton.style.border = 'none';
+            confirmButton.style.padding = '8px 16px';
+            confirmButton.style.borderRadius = '4px';
+            confirmButton.style.cursor = 'pointer';
+            confirmButton.style.marginRight = '10px';
+            
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.style.backgroundColor = '#3d3d3d';
+            cancelButton.style.color = 'white';
+            cancelButton.style.border = 'none';
+            cancelButton.style.padding = '8px 16px';
+            cancelButton.style.borderRadius = '4px';
+            cancelButton.style.cursor = 'pointer';
+            cancelButton.style.marginRight = '10px';
+            
+            const selectedCount = document.createElement('div');
+            selectedCount.style.marginTop = '8px';
+            selectedCount.style.fontWeight = 'bold';
+            selectedCount.style.color = '#dc3545';
+            selectedCount.textContent = `${selectedForDeletion.size} selected`;
+            
+            // Confirm button handler
+            confirmButton.onclick = () => {
+                if (selectedForDeletion.size === 0) {
+                    alert('Please select workouts to delete.');
+                    return;
+                }
+
+                const confirmMsg = `Are you sure you want to delete ${selectedForDeletion.size} workout${selectedForDeletion.size > 1 ? 's' : ''}? This action cannot be undone.`;
+                if (confirm(confirmMsg)) {
+                    // Delete selected workouts
+                    selectedForDeletion.forEach(key => {
+                        delete workouts[key];
+                    });
+                    
+                    // Save to localStorage
+                    localStorage.setItem('workouts', JSON.stringify(workouts));
+                    
+                    alert(`${selectedForDeletion.size} workout${selectedForDeletion.size > 1 ? 's' : ''} deleted successfully.`);
+                    
+                    // Update all components
+                    updateAll();
+                }
+            };
+            
+            // Cancel button handler
+            cancelButton.onclick = () => {
+                isDeleteMode = false;
+                selectedForDeletion.clear();
+                showYear(selectedYear); // Re-render without delete mode
+            };
+            
+            // Update confirm button state
+            confirmButton.disabled = selectedForDeletion.size === 0;
+            confirmButton.style.opacity = selectedForDeletion.size === 0 ? '0.6' : '1';
+            
+            controlsDiv.appendChild(confirmButton);
+            controlsDiv.appendChild(cancelButton);
+            controlsDiv.appendChild(selectedCount);
+        }
+
+        yearContent.appendChild(controlsDiv);
+
+        // Group by month
+        const months = {};
+        allWorkoutEntries.forEach(e => {
+            if (e.year == selectedYear) {
+                if (!months[e.month]) months[e.month] = [];
+                months[e.month].push(e);
+            }
+        });
+
+        // Render months
+        Object.keys(months).sort((a, b) => a - b).forEach(monthNum => {
+            const monthArr = months[monthNum];
+            const monthName = new Date(selectedYear, monthNum - 1, 1).toLocaleString('default', { month: 'long' });
+            const monthDiv = document.createElement('div');
+            monthDiv.style.marginBottom = '10px';
+            monthDiv.innerHTML = `<strong>${monthName} (${monthArr.length} workout${monthArr.length > 1 ? 's' : ''})</strong>`;
+            const ul = document.createElement('ul');
+            ul.style.marginLeft = '10px';
+            
+            monthArr.forEach(({ day, key, workout }) => {
+                const li = document.createElement('li');
+                li.style.display = 'flex';
+                li.style.alignItems = 'center';
+                li.style.padding = '5px 0';
+                li.style.borderRadius = '3px';
+                li.style.margin = '2px 0';
+
+                if (isDeleteMode) {
+                    // Create checkbox for delete mode
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.style.marginRight = '8px';
+                    checkbox.checked = selectedForDeletion.has(key);
+                    
+                    checkbox.onchange = () => {
+                        if (checkbox.checked) {
+                            selectedForDeletion.add(key);
+                        } else {
+                            selectedForDeletion.delete(key);
                         }
-
-                        // Get unique years
-                        const years = [...new Set(allWorkoutEntries.map(e => e.year))].sort((a, b) => b - a);
-
-                        // Populate year dropdown
-                        years.forEach(y => {
-                            const opt = document.createElement('option');
-                            opt.value = y;
-                            opt.textContent = y;
-                            yearSelect.appendChild(opt);
-                        });
-
-                        // Show workouts for selected year
-                        function showYear(selectedYear) {
-                            yearContent.innerHTML = '';
-                            // Group by month
-                            const months = {};
-                            allWorkoutEntries.forEach(e => {
-                                if (e.year == selectedYear) {
-                                    if (!months[e.month]) months[e.month] = [];
-                                    months[e.month].push(e);
-                                }
-                            });
-
-                            // Render months
-                            Object.keys(months).sort((a, b) => a - b).forEach(monthNum => {
-                                const monthArr = months[monthNum];
-                                const monthName = new Date(selectedYear, monthNum - 1, 1).toLocaleString('default', { month: 'long' });
-                                const monthDiv = document.createElement('div');
-                                monthDiv.style.marginBottom = '10px';
-                                monthDiv.innerHTML = `<strong>${monthName} (${monthArr.length} workout${monthArr.length > 1 ? 's' : ''})</strong>`;
-                                const ul = document.createElement('ul');
-                                ul.style.marginLeft = '10px';
-                                monthArr.forEach(({ day, key, workout }) => {
-                                    const li = document.createElement('li');
-                                    li.style.cursor = 'pointer';
-                                    li.textContent = `Day ${day}: ${workout.title}`;
-                                    if (workout.completed) {
-                                        li.style.textDecoration = "line-through";
-                                        li.style.opacity = "0.6";
-                                    }
-                                    li.onclick = () => showViewWorkoutModal(key);
-                                    ul.appendChild(li);
-                                });
-                                monthDiv.appendChild(ul);
-                                yearContent.appendChild(monthDiv);
-                            });
+                        // Update the counter
+                        const countSpan = document.querySelector('#deleteControls div');
+                        if (countSpan) {
+                            countSpan.textContent = `${selectedForDeletion.size} selected`;
                         }
+                        // Update confirm button
+                        const confirmBtn = document.querySelector('#deleteControls button');
+                        if (confirmBtn) {
+                            confirmBtn.disabled = selectedForDeletion.size === 0;
+                            confirmBtn.style.opacity = selectedForDeletion.size === 0 ? '0.6' : '1';
+                        }
+                    };
 
-                        // Initial render
-                        showYear(yearSelect.value = years[0]);
+                    li.appendChild(checkbox);
+                    
+                    // Change background color when in delete mode
+                    li.style.backgroundColor = selectedForDeletion.has(key) ? '#ffebee' : '#f8f9fa';
+                    li.style.padding = '8px';
+                    li.style.cursor = 'pointer';
+                    
+                    // Click handler for the entire li (excluding checkbox)
+                    li.onclick = (e) => {
+                        if (e.target === checkbox) return;
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.onchange();
+                    };
+                }
 
-                        yearSelect.onchange = () => showYear(yearSelect.value);
-                    }
+                const textSpan = document.createElement('span');
+                textSpan.textContent = `Day ${day}: ${workout.title}`;
+                
+                if (workout.completed) {
+                    textSpan.style.textDecoration = "line-through";
+                    textSpan.style.opacity = "0.6";
+                }
+
+                // Only allow viewing workout when not in delete mode
+                if (!isDeleteMode) {
+                    li.style.cursor = 'pointer';
+                    li.onclick = () => showViewWorkoutModal(key);
+                }
+
+                li.appendChild(textSpan);
+                ul.appendChild(li);
+            });
+            
+            monthDiv.appendChild(ul);
+            yearContent.appendChild(monthDiv);
+        });
+    }
+
+    // Initial render
+    showYear(yearSelect.value = years[0]);
+
+    yearSelect.onchange = () => showYear(yearSelect.value);
+}
                     
                     //Renders the workout accordion
                     function renderAccordion() {
