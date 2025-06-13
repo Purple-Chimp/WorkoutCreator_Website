@@ -51,15 +51,18 @@
             </div>
             <div id="workoutAccordion"></div>
             <div id="workoutModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-                <div style="background:#fff; padding:20px; border-radius:8px; min-width:250px; max-width:90vw;">
-                    <h3>Workout Title</h3>
+            <div style="background:#fff; padding:20px; border-radius:8px; min-width:250px; max-width:90vw; max-height:90vh; overflow-y:auto;">                    <h3>Workout Title</h3>
                     <input id="workoutTitleInput" type="text" placeholder="Workout Title" style="width:60%;margin-bottom:10px;">
                     <h3>Add Exercise</h3>
                     <div class="exercise-inputs" style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;">
-                        <label style="display:flex;flex-direction:row;align-items:center;gap:10px;">
-                            <span style="min-width:90px;text-align:right;">Exercise:</span>
-                            <select id="exerciseSelect"></select>
-                        </label>
+                        <div id="muscleSelectorContainer" style="margin-bottom:10px;">
+                          <div id="muscleDiagram" style="margin-bottom:8px;">
+                            <!-- Simple SVG diagram will be injected here -->
+                          </div>
+                          <div id="muscleButtons" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+                        </div>
+                        <div id="exerciseListByMuscle"></div>
+                        <div id="selectedExerciseName" style="font-weight:bold;margin-bottom:6px;"></div>
                         <label style="display:flex;flex-direction:row;align-items:center;gap:10px;">
                             <span style="min-width:90px;text-align:right;">Sets:</span>
                             <input type="number" id="setsInput" min="1" value="3" style="width:80px;">
@@ -184,11 +187,11 @@
                       ce => !firestoreExercises.some(fe => fe.name === ce.name)
                     )
                   ];
-                  populateExerciseSelect();
+                  
                   renderCustomExercisesList();
                 });
                 function populateExerciseSelect() {
-                    const select = document.getElementById('exerciseSelect');
+                    //const select = document.getElementById('exerciseSelect');
                     select.innerHTML = '';
                     exerciseDatabase.forEach(ex => {
                     const option = document.createElement('option');
@@ -214,11 +217,15 @@
                     //Exercise Database
                     const savedCustomExercises = JSON.parse(localStorage.getItem('customExercises')) || [];
                     
+                    // Muscle groups array
+                    const MUSCLE_GROUPS = [
+                        "Shoulders", "Triceps", "Biceps", "Glutes", "Low back", "Upper Back",
+                        "Hamstrings", "Quads", "Calves", "Forearms", "Chest", "Abs/core", "Other"
+                    ];
 
                     // Modal elements
                     const workoutModal = document.getElementById('workoutModal');
                     const workoutTitleInput = document.getElementById('workoutTitleInput');
-                    const exerciseSelect = document.getElementById('exerciseSelect');
                     const setsInput = document.getElementById('setsInput');
                     const repsInput = document.getElementById('repsInput');
                     const repsLabel = document.getElementById('repsLabel');
@@ -266,25 +273,9 @@
 
                     let selectedPopupDays = [];
 
-                    // Populate exercise dropdown
-                    function populateExerciseSelect() {
-                        const select = document.getElementById('exerciseSelect');
-                        select.innerHTML = '';
-                        exerciseDatabase.forEach(ex => {
-                            const opt = document.createElement('option');
-                            opt.value = ex.name;
-                            opt.textContent = ex.name;
-                            select.appendChild(opt);
-                        });
-                        // Add "Add New Exercise..." at the end
-                        const addNewOpt = document.createElement('option');
-                        addNewOpt.value = '__add_new__';
-                        addNewOpt.textContent = '➕ Add New Exercise...';
-                        select.appendChild(addNewOpt);
-                    }
-
+                    
                     // Populate exercise select with custom exercises
-                    document.getElementById('exerciseSelect').onchange = function() {
+                    //document.getElementById('exerciseSelect').onchange = function() {
                         if (this.value === '__add_new__') {
                             const newName = prompt('Enter new exercise name:');
                             if (newName && !exerciseDatabase.some(e => e.name === newName)) {
@@ -293,18 +284,16 @@
                                 const newExercise = { name: newName, description, image };
                                 exerciseDatabase.push(newExercise);
                                 localStorage.setItem('customExercises', JSON.stringify(exerciseDatabase.filter(e => !["Push Up","Squat","Pull Up","Bench Press","Deadlift","Plank"].includes(e.name))));
-                                populateExerciseSelect();
                                 renderCustomExercisesList();
                                 this.value = newName;
                             } else {
                                 this.value = exerciseDatabase[0]?.name || '';
                             }
                         }
-                    };
+                    
 
-                    populateExerciseSelect();
                     renderCustomExercisesList();
-                    exerciseSelect.value = "Push Up";
+                    //exerciseSelect.value = "Push Up";
                     
                     // Populate custom exercises list
                     function renderCustomExercisesList() {
@@ -330,6 +319,12 @@
                                 document.getElementById('exerciseInfoDesc').textContent = ex.description || "No description.";
                                 document.getElementById('exerciseInfoImage').src = ex.image || "";
                                 document.getElementById('exerciseInfoImage').style.display = ex.image ? "block" : "none";
+                                // Show muscle groups
+                                let muscles = ex.muscles && ex.muscles.length
+                                    ? `<strong>Muscle Groups:</strong> ${ex.muscles.join(', ')}`
+                                    : "<em>No muscle groups assigned.</em>";
+                                // Add muscle groups below description
+                                document.getElementById('exerciseInfoDesc').innerHTML += `<br><br>${muscles}`;
                                 document.getElementById('exerciseInfoModal').style.display = 'flex';
                             };
                             li.appendChild(viewBtn);
@@ -347,7 +342,6 @@
                                         'customExercises',
                                         JSON.stringify(exerciseDatabase.filter(e => !defaultNames.includes(e.name)))
                                     );
-                                    populateExerciseSelect();
                                     renderCustomExercisesList();
                                 };
                                 li.appendChild(delBtn);
@@ -369,7 +363,7 @@
                         isTimeInput.checked = false;
                         timeLabel.style.display = 'none';
                         timeInput.value = 30;
-                        exerciseSelect.selectedIndex = 0;
+                        //exerciseSelect.selectedIndex = 0;
                         workoutModal.style.display = 'flex';
                         // Load existing workout if present
                         if (workouts[key]) {
@@ -385,6 +379,11 @@
                         // Pre-fill the copy days input with the initial day
                         createCopyDaysInput.value = key;
                         selectedCreatePopupDays = [key];
+
+                        selectMuscle(MUSCLE_GROUPS[0]);
+
+                        document.getElementById('selectedExerciseName').textContent = '';
+                        window.selectedExerciseForAdd = null;
                     }
 
                     // Hide modal
@@ -398,7 +397,7 @@
 
                     // Add exercise to list
                     addExerciseBtn.onclick = function() {
-                        const exercise = exerciseSelect.value;
+                        const exercise = window.selectedExerciseForAdd;
                         const sets = setsInput.value;
                         const reps = repsInput.value;
                         const weight = weightInput.value;
@@ -950,15 +949,15 @@
                                 li.innerHTML = ""; // Clear li
 
                                 // Exercise select dropdown
-                                const exerciseSelect = document.createElement('select');
+                                //const exerciseSelect = document.createElement('select');
                                 exerciseDatabase.forEach(e => {
                                     const opt = document.createElement('option');
                                     opt.value = e.name;
                                     opt.textContent = e.name;
                                     if (e.name === ex.exercise) opt.selected = true;
-                                    exerciseSelect.appendChild(opt);
+                                    //exerciseSelect.appendChild(opt);
                                 });
-                                li.appendChild(exerciseSelect);
+                                //li.appendChild(exerciseSelect);
 
                                 // Sets
                                 const setsInput = createInput('number', ex.sets, 1, "width:40px;margin-left:4px;");
@@ -1040,7 +1039,7 @@
                                     }
                                     workout.exercises[idx] = {
                                         ...ex,
-                                        exercise: exerciseSelect.value,
+                                        //exercise: exerciseSelect.value,
                                         sets,
                                         reps: isTime ? null : repsOrTime,
                                         time: isTime ? repsOrTime : null,
@@ -1330,7 +1329,6 @@
                     };
 
                     updateAll();
-                    //goBackBtn.addEventListener('click', goBack);
                     
                     // Close exercise info modal
                     document.getElementById('closeExerciseInfoBtn').onclick = function() {
@@ -1386,6 +1384,159 @@
                             });
                         }
                     };
+
+                    // Render muscle groups
+                    function renderMuscleDiagram(selectedMuscle) {
+                        const selectedColor = "#39e639";
+                        const unselectedColor = "#a8d5a8";
+                        const bodyColor = "#cfd8dc";
+                        const stroke = "#222";
+
+                        const svg = `
+                        <svg width="600" height="420" viewBox="0 0 600 420">
+                        <!-- FRONT VIEW -->
+                        <g>
+                            <!-- Skeleton (drawn first, behind muscles) -->
+                            <circle cx="120" cy="60" r="35" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="80" y="90" width="80" height="80" rx="18" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="95" y="180" width="50" height="30" rx="10" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="30" y="110" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="30" y="170" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="190" y="110" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="190" y="170" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="70" y="220" width="28" height="90" rx="14" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="70" y="320" width="28" height="40" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="142" y="220" width="28" height="90" rx="14" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="142" y="320" width="28" height="40" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <!-- Muscles (Front, drawn on top) -->
+                            <!-- Shoulders -->
+                            <circle cx="45" cy="120" r="18" fill="${selectedMuscle==='Shoulders' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Shoulders" style="cursor:pointer;"/>
+                            <circle cx="205" cy="120" r="18" fill="${selectedMuscle==='Shoulders' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Shoulders" style="cursor:pointer;"/>
+                            <!-- Biceps -->
+                            <ellipse cx="45" cy="155" rx="12" ry="25" fill="${selectedMuscle==='Biceps' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Biceps" style="cursor:pointer;"/>
+                            <ellipse cx="205" cy="155" rx="12" ry="25" fill="${selectedMuscle==='Biceps' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Biceps" style="cursor:pointer;"/>
+                            <!-- Forearms -->
+                            <ellipse cx="45" cy="200" rx="10" ry="18" fill="${selectedMuscle==='Forearms' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Forearms" style="cursor:pointer;"/>
+                            <ellipse cx="205" cy="200" rx="10" ry="18" fill="${selectedMuscle==='Forearms' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Forearms" style="cursor:pointer;"/>
+                            <!-- Chest -->
+                            <ellipse cx="120" cy="115" rx="28" ry="18" fill="${selectedMuscle==='Chest' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Chest" style="cursor:pointer;"/>
+                            <!-- Abs/core -->
+                            <ellipse cx="120" cy="160" rx="28" ry="18" fill="${selectedMuscle==='Abs/core' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Abs/core" style="cursor:pointer;"/>
+                            <!-- Quads (upper half of thigh, half size) -->
+                            <ellipse cx="84" cy="245" rx="14" ry="22" fill="${selectedMuscle==='Quads' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Quads" style="cursor:pointer;"/>
+                            <ellipse cx="156" cy="245" rx="14" ry="22" fill="${selectedMuscle==='Quads' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Quads" style="cursor:pointer;"/>
+                            <!-- Calves -->
+                            <ellipse cx="84" cy="350" rx="10" ry="20" fill="${selectedMuscle==='Calves' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Calves" style="cursor:pointer;"/>
+                            <ellipse cx="156" cy="350" rx="10" ry="20" fill="${selectedMuscle==='Calves' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Calves" style="cursor:pointer;"/>
+                            <!-- Other (front, below abs/core) -->
+                            <text x="120" y="400" font-size="20" text-anchor="middle" fill="#222">Front</text>
+                        </g>
+                        <!-- BACK VIEW -->
+                        <g>
+                            <!-- Skeleton (drawn first, behind muscles) -->
+                            <circle cx="420" cy="60" r="35" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="380" y="90" width="80" height="80" rx="18" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="395" y="180" width="50" height="30" rx="10" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="330" y="110" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="330" y="170" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="490" y="110" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="490" y="170" width="30" height="50" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="370" y="220" width="28" height="90" rx="14" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="370" y="320" width="28" height="40" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="442" y="220" width="28" height="90" rx="14" fill="${bodyColor}" stroke="${stroke}"/>
+                            <rect x="442" y="320" width="28" height="40" rx="12" fill="${bodyColor}" stroke="${stroke}"/>
+                            <!-- Muscles (Back, drawn on top) -->
+                            <!-- Upper Back -->
+                            <polygon points="380,90 460,90 420,150" fill="${selectedMuscle==='Upper Back' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Upper Back" style="cursor:pointer;"/>
+                            <!-- Low back -->
+                            <rect x="405" y="150" width="30" height="20" rx="6" fill="${selectedMuscle==='Low back' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Low back" style="cursor:pointer;"/>
+                            <!-- Triceps -->
+                            <ellipse cx="345" cy="155" rx="12" ry="25" fill="${selectedMuscle==='Triceps' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Triceps" style="cursor:pointer;"/>
+                            <ellipse cx="505" cy="155" rx="12" ry="25" fill="${selectedMuscle==='Triceps' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Triceps" style="cursor:pointer;"/>
+                            <!-- Forearms -->
+                            <ellipse cx="345" cy="200" rx="10" ry="18" fill="${selectedMuscle==='Forearms' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Forearms" style="cursor:pointer;"/>
+                            <ellipse cx="505" cy="200" rx="10" ry="18" fill="${selectedMuscle==='Forearms' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Forearms" style="cursor:pointer;"/>
+                            <!-- Glutes -->
+                            <ellipse cx="420" cy="210" rx="28" ry="16" fill="${selectedMuscle==='Glutes' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Glutes" style="cursor:pointer;"/>
+                            <!-- Hamstrings (lower half of thigh, half size) -->
+                            <ellipse cx="384" cy="295" rx="14" ry="22" fill="${selectedMuscle==='Hamstrings' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Hamstrings" style="cursor:pointer;"/>
+                            <ellipse cx="456" cy="295" rx="14" ry="22" fill="${selectedMuscle==='Hamstrings' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Hamstrings" style="cursor:pointer;"/>
+                            <!-- Calves -->
+                            <ellipse cx="384" cy="350" rx="10" ry="20" fill="${selectedMuscle==='Calves' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Calves" style="cursor:pointer;"/>
+                            <ellipse cx="456" cy="350" rx="10" ry="20" fill="${selectedMuscle==='Calves' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Calves" style="cursor:pointer;"/>
+                            <!-- Other (back, below glutes) -->
+                            <ellipse cx="550" cy="380" rx="18" ry="10" fill="${selectedMuscle==='Other' ? selectedColor : unselectedColor}" stroke="${stroke}" data-muscle="Other" style="cursor:pointer;"/>
+                            <text x="420" y="400" font-size="20" text-anchor="middle" fill="#222">Back</text>
+                        </g>
+                        </svg>
+                        `;
+
+                        document.getElementById('muscleDiagram').innerHTML = svg;
+
+                        // Add click handlers for all muscle bellies
+                        document.getElementById('muscleDiagram').querySelectorAll('[data-muscle]').forEach(el => {
+                            el.onclick = () => selectMuscle(el.getAttribute('data-muscle'));
+                        });
+                    }
+
+                        // Update selectMuscle to accept view
+                        function selectMuscle(muscle, view = 'front') {
+                        window.selectedMuscleView = view;
+                        window.selectedMuscle = muscle;
+                        renderMuscleDiagram(muscle, view);
+                        renderMuscleButtons(muscle);
+                        renderExerciseListByMuscle(muscle);
+                        }
+
+                    // Muscle groups
+                    function renderMuscleButtons(selectedMuscle) {
+                    const container = document.getElementById('muscleButtons');
+                    container.innerHTML = '';
+                    MUSCLE_GROUPS.forEach(muscle => {
+                        const btn = document.createElement('button');
+                        btn.textContent = muscle;
+                        btn.style.background = muscle === selectedMuscle ? '#2a5ad7' : '#eee';
+                        btn.style.color = muscle === selectedMuscle ? '#fff' : '#222';
+                        btn.style.border = '1px solid #ccc';
+                        btn.style.borderRadius = '4px';
+                        btn.onclick = () => selectMuscle(muscle);
+                        container.appendChild(btn);
+                    });
+                    }
+
+                    function renderExerciseListByMuscle(muscle) {
+                    const container = document.getElementById('exerciseListByMuscle');
+                    container.innerHTML = '';
+                    const filtered = exerciseDatabase.filter(ex => (ex.muscles || []).includes(muscle));
+                    if (filtered.length === 0) {
+                        container.innerHTML = '<em>No exercises for this muscle group.</em>';
+                        return;
+                    }
+                    filtered.forEach(ex => {
+                        const btn = document.createElement('button');
+                        btn.textContent = ex.name;
+                        btn.style.margin = '4px';
+                        btn.onclick = () => {
+                        // Set selected exercise and update UI
+                        document.getElementById('selectedExerciseName').textContent = ex.name;
+                        // Optionally, show description/image
+                        // ... your logic ...
+                        // Set value for adding exercise
+                        window.selectedExerciseForAdd = ex.name;
+                        };
+                        container.appendChild(btn);
+                    });
+                }
+
+                    let selectedMuscle = null;
+                    window.selectedExerciseForAdd = null;
+
+                    function selectMuscle(muscle) {
+                    selectedMuscle = muscle;
+                    renderMuscleDiagram(muscle);
+                    renderMuscleButtons(muscle);
+                    renderExerciseListByMuscle(muscle);
+                    }
 
                     // Show all shared workouts
                     function showAllMySharedWorkouts() {
@@ -1480,25 +1631,79 @@
 }); // <-- End of DOMContentLoaded
               // Add custom exercise button logic
               document.getElementById('addCustomExerciseBtn').onclick = function() {
-                const newName = prompt('Enter new exercise name:');
-              if (newName && !exerciseDatabase.some(e => e.name === newName)) {
-                  const description = prompt('Enter a description for this exercise (optional):') || "";
-                  const image = prompt('Enter an image URL for this exercise (optional):') || "";
-                  const newExercise = { name: newName, description, image };
-                  exerciseDatabase.push(newExercise);
-                localStorage.setItem(
-                        'customExercises',
-                JSON.stringify(exerciseDatabase.filter(e => !["Push Up","Squat","Pull Up","Bench Press","Deadlift","Plank"].includes(e.name)))
-              );
-                populateExerciseSelect();
-                renderCustomExercisesList();
-              // Optionally, set the select value to the new exercise:
-              const select = document.getElementById('exerciseSelect');
-              if (select) select.value = newName;
-            } else if (newName) {
-                  alert('Exercise already exists!');
-            }
-          };
+                    // Create a modal for custom exercise creation
+                    const MUSCLE_GROUPS = [
+                        "Shoulders", "Triceps", "Biceps", "Glutes", "Low back", "Upper Back",
+                        "Hamstrings", "Quads", "Calves", "Forearms", "Chest", "Abs/core", "Other"
+                    ];
+                    let modal = document.createElement('div');
+                    modal.style.position = 'fixed';
+                    modal.style.top = '0';
+                    modal.style.left = '0';
+                    modal.style.width = '100vw';
+                    modal.style.height = '100vh';
+                    modal.style.background = 'rgba(0,0,0,0.5)';
+                    modal.style.zIndex = '9999';
+                    modal.style.display = 'flex';
+                    modal.style.alignItems = 'center';
+                    modal.style.justifyContent = 'center';
+
+                    let box = document.createElement('div');
+                    box.style.background = '#fff';
+                    box.style.padding = '24px';
+                    box.style.borderRadius = '10px';
+                    box.style.minWidth = '320px';
+                    box.style.maxWidth = '90vw';
+
+                    box.innerHTML = `
+                        <h3>Add Custom Exercise</h3>
+                        <label>Name:<br><input id="customExName" type="text" style="width:90%;margin-bottom:8px;"></label><br>
+                        <label>Description:<br><textarea id="customExDesc" style="width:90%;margin-bottom:8px;"></textarea></label><br>
+                        <label>Image URL:<br><input id="customExImg" type="text" style="width:90%;margin-bottom:8px;"></label><br>
+                        <div style="margin-bottom:8px;"><strong>Select Muscle Groups:</strong></div>
+                        <div id="muscleGroupChecks" style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-bottom:12px;">
+                            ${MUSCLE_GROUPS.map(m => `
+                                <label style="font-weight:normal;">
+                                    <input type="checkbox" value="${m}" class="muscleCheck"> ${m}
+                                </label>
+                            `).join('')}
+                        </div>
+                        <button id="saveCustomExBtn" style="margin-right:10px;">Save</button>
+                        <button id="cancelCustomExBtn">Cancel</button>
+                        <div id="customExError" style="color:#d9534f;margin-top:8px;"></div>
+                    `;
+
+                    modal.appendChild(box);
+                    document.body.appendChild(modal);
+
+                    document.getElementById('cancelCustomExBtn').onclick = () => document.body.removeChild(modal);
+
+                    document.getElementById('saveCustomExBtn').onclick = function() {
+                        const name = document.getElementById('customExName').value.trim();
+                        const description = document.getElementById('customExDesc').value.trim();
+                        const image = document.getElementById('customExImg').value.trim();
+                        const muscles = Array.from(box.querySelectorAll('.muscleCheck:checked')).map(cb => cb.value);
+
+                        if (!name) {
+                            document.getElementById('customExError').textContent = "Name is required.";
+                            return;
+                        }
+                        if (exerciseDatabase.some(e => e.name === name)) {
+                            document.getElementById('customExError').textContent = "Exercise with this name already exists.";
+                            return;
+                        }
+                        if (muscles.length === 0) {
+                            document.getElementById('customExError').textContent = "Select at least one muscle group.";
+                            return;
+                        }
+
+                        const newExercise = { name, description, image, muscles };
+                        exerciseDatabase.push(newExercise);
+                        localStorage.setItem('customExercises', JSON.stringify(exerciseDatabase.filter(e => !["Push Up","Squat","Pull Up","Bench Press","Deadlift","Plank"].includes(e.name))));
+                        renderCustomExercisesList();
+                        document.body.removeChild(modal);
+                    };
+                };
                 
             </script>
 
