@@ -1,4 +1,4 @@
-# Workout Website
+# Workout Website (Link: https://workout-website-4ad4d.firebaseapp.com/)
 
 A web application for creating, tracking, and sharing custom workout routines. Built with HTML, CSS, JavaScript, and Firebase Firestore for sharing workouts.
 
@@ -44,16 +44,6 @@ Open the `Workout Website (with Firebase)` directory in [Visual Studio Code](htt
 
 You can open `index.html` directly in your browser for local use.  
 To use sharing features, you must deploy to Firebase Hosting.
-
-### 4. Firebase Hosting (Optional)
-
-If you want to use the sharing/import feature:
-
-- Install [Firebase CLI](https://firebase.google.com/docs/cli)
-- Login:  
-  `firebase login`
-- Deploy:  
-  `firebase deploy --only hosting`
 
 ## Usage
 
