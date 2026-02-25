@@ -1,4 +1,4 @@
-# Workout Website (Link: https://workout-website-4ad4d.firebaseapp.com/)
+# Workout Website (Link: https:[//workout-website-4ad4d.firebaseapp.com/](https://workout-website-4ad4d.web.app/))
 
 A web application for creating, tracking, and sharing custom workout routines. Built with HTML, CSS, JavaScript, and Firebase Firestore for sharing workouts.
 
@@ -12,23 +12,7 @@ A web application for creating, tracking, and sharing custom workout routines. B
 - Share and import workouts using unique codes (via Firebase)
 - Print-friendly workout plan
 
-## Directory Structure
-
-```
-Workout Website (with Firebase)/
-├── .firebaserc
-├── .gitignore
-├── 404.html
-├── firebase.json
-├── index.html
-├── printable-workouts.html
-├── style.css
-├── scripts/
-│   └── firebase-init.js
-└── .firebase/
-```
-
-## Getting Started
+## Getting Started (Run project locally)
 
 ### 1. Clone the Repository
 
@@ -38,12 +22,7 @@ git clone https://github.com/Purple-Chimp/WorkoutCreator_Website.git
 
 ### 2. Open the Project
 
-Open the `Workout Website (with Firebase)` directory in [Visual Studio Code](https://code.visualstudio.com/) or your preferred editor.
-
-### 3. Run Locally
-
-You can open `index.html` directly in your browser for local use.  
-To use sharing features, you must deploy to Firebase Hosting.
+Open the project folder. Open the `index.html` file to start it
 
 ## Usage
 
