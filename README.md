@@ -23,6 +23,7 @@ git clone https://github.com/Purple-Chimp/WorkoutCreator_Website.git
 ### 2. Open the Project
 
 Open the project folder. Open the `index.html` file to start it
+_Note: The sharing feature will not work if ran locally_
 
 ## Usage
 
